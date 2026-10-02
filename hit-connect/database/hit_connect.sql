@@ -1,0 +1,118 @@
+CREATE DATABASE IF NOT EXISTS hit_connect CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE hit_connect;
+
+CREATE TABLE users (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ username VARCHAR(50) NOT NULL UNIQUE,
+ full_name VARCHAR(120) NOT NULL,
+ email VARCHAR(180) NOT NULL UNIQUE,
+ password VARCHAR(255) NOT NULL,
+ profile_picture VARCHAR(255) NULL,
+ bio TEXT NULL,
+ role ENUM('user','admin') DEFAULT 'user',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE posts (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ user_id INT NOT NULL,
+ body TEXT NOT NULL,
+ image VARCHAR(255) NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE likes (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ post_id INT NOT NULL,
+ user_id INT NOT NULL,
+ UNIQUE KEY unique_like(post_id,user_id),
+ FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE comments (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ post_id INT NOT NULL,
+ user_id INT NOT NULL,
+ body TEXT NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE follows (
+ follower_id INT NOT NULL,
+ following_id INT NOT NULL,
+ PRIMARY KEY(follower_id,following_id),
+ FOREIGN KEY(follower_id) REFERENCES users(id) ON DELETE CASCADE,
+ FOREIGN KEY(following_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE products (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ seller_id INT NOT NULL,
+ title VARCHAR(150) NOT NULL,
+ description TEXT,
+ price DECIMAL(10,2) NOT NULL,
+ category VARCHAR(80) NOT NULL,
+ image VARCHAR(255),
+ status ENUM('available','sold') DEFAULT 'available',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(seller_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE skills (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ user_id INT NOT NULL,
+ skill_name VARCHAR(120) NOT NULL,
+ description TEXT,
+ availability VARCHAR(120),
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE messages (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ sender_id INT NOT NULL,
+ receiver_id INT NOT NULL,
+ body TEXT NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(sender_id) REFERENCES users(id) ON DELETE CASCADE,
+ FOREIGN KEY(receiver_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE reviews (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ reviewer_id INT NOT NULL,
+ reviewed_user_id INT NOT NULL,
+ product_id INT NULL,
+ skill_id INT NULL,
+ rating TINYINT NOT NULL,
+ comment TEXT,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(reviewer_id) REFERENCES users(id) ON DELETE CASCADE,
+ FOREIGN KEY(reviewed_user_id) REFERENCES users(id) ON DELETE CASCADE,
+ FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE SET NULL,
+ FOREIGN KEY(skill_id) REFERENCES skills(id) ON DELETE SET NULL
+);
+
+CREATE TABLE reports (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ reporter_id INT NOT NULL,
+ target_type ENUM('post','user','product','message') NOT NULL,
+ target_id INT NOT NULL,
+ reason VARCHAR(255) NOT NULL,
+ status ENUM('open','reviewed','closed') DEFAULT 'open',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(reporter_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE notifications (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ user_id INT NOT NULL,
+ message VARCHAR(255) NOT NULL,
+ is_read TINYINT(1) DEFAULT 0,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
